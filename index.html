@@ -64,7 +64,6 @@
     }
     .checkbox-group {
       display: flex;
-      flex-direction: column;
       gap: 8px;
       margin-bottom: 10px;
     }
@@ -95,12 +94,14 @@
       border: none;
     }
     .reset-button {
-      font-size: 14px;
-      padding: 6px 12px;
+      font-size: 16px; /* Aumentado um pouco o tamanho */
+      padding: 6px 12px; /* Tamanho aumentado */
       background-color: #f44336;
       color: white;
       border-radius: 6px;
-      width: 120px;
+      width: 36px; /* Aumento do tamanho do botão */
+      text-align: center;
+      margin-left: auto; /* Alinha à direita */
     }
   </style>
 </head>
@@ -117,6 +118,7 @@
         <input type="checkbox" id="atendimentoCheckbox" />
         Atendimento (+R$ 1000)
       </label>
+      <button class="reset-button" onclick="resetar()">R</button> <!-- Botão de Resetar -->
     </div>
 
     <div class="total-box">
@@ -130,7 +132,6 @@
       <button onclick="preset('G')">G</button>
       <button onclick="preset('GG')">GG</button>
       <button onclick="add10x10()">10x10</button>
-      <button class="reset-button" onclick="resetar()">Resetar</button>
     </div>
   </div>
 
