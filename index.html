@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculadora Médica</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #e3f2fd;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .container {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #fff;
+      border-radius: 6px;
+      padding: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .item-name {
+      flex: 1;
+      font-size: 14px;
+    }
+    .controls {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    input[type="number"] {
+      width: 45px;
+      padding: 3px;
+      font-size: 14px;
+      text-align: center;
+    }
+    button {
+      padding: 3px 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .max-button {
+      background-color: #2196f3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    .bottom-section {
+      background: #fff;
+      padding: 10px;
+      margin: 10px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .checkbox-item {
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .total-box {
+      font-size: 20px;
+      font-weight: bold;
+      color: #2e7d32;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .action-buttons button {
+      font-size: 11px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      background-color: #90caf9;
+      border: none;
+    }
+    .reset-button {
+      font-size: 14px;
+      padding: 6px 12px;
+      background-color: #f44336;
+      color: white;
+      border-radius: 6px;
+      width: 120px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="items"></div>
+
+  <div class="bottom-section">
+    <div class="checkbox-group">
+      <label class="checkbox-item">
+        <input type="checkbox" id="descontoCheckbox" />
+        Aplicar 10% de desconto
+      </label>
+      <label class="checkbox-item">
+        <input type="checkbox" id="atendimentoCheckbox" />
+        Atendimento (+R$ 1000)
+      </label>
+    </div>
+
+    <div class="total-box">
+      Total: R$ <span id="total">0.00</span>
+    </div>
+
+    <div class="action-buttons">
+      <button onclick="preset('TUDO')">TUDO</button>
+      <button onclick="preset('P')">P</button>
+      <button onclick="preset('M')">M</button>
+      <button onclick="preset('G')">G</button>
+      <button onclick="preset('GG')">GG</button>
+      <button onclick="add10x10()">10x10</button>
+      <button class="reset-button" onclick="resetar()">Resetar</button>
+    </div>
+  </div>
+
+  <script>
+    const produtos = [
+      { nome: 'Adrenalina', preco: 8000, maximo: 3 },
+      { nome: 'Medkit', preco: 1500, maximo: 2 },
+      { nome: 'Ritmoneury', preco: 500, maximo: 5 },
+      { nome: 'Sinkalm', preco: 500, maximo: 5 },
+      { nome: 'Analgésico', preco: 400, maximo: 10 },
+      { nome: 'Bandagem', preco: 300, maximo: 5 },
+      { nome: 'Atadura', preco: 200, maximo: 10 },
+    ];
+
+    const quantidades = {};
+    let extraValor = 0;
+
+    const itemsContainer = document.getElementById('items');
+    const totalElement = document.getElementById('total');
+    const descontoCheckbox = document.getElementById('descontoCheckbox');
+    const atendimentoCheckbox = document.getElementById('atendimentoCheckbox');
+
+    function atualizarTotal() {
+      let subtotal = 0;
+      produtos.forEach((produto, index) => {
+        const qtd = quantidades[index] || 0;
+        subtotal += produto.preco * qtd;
+      });
+
+      if (atendimentoCheckbox.checked) {
+        subtotal += 1000;
+      }
+
+      subtotal += extraValor;
+
+      if (descontoCheckbox.checked) {
+        subtotal *= 0.9;
+      }
+
+      totalElement.textContent = subtotal.toFixed(2);
+    }
+
+    function criarItem(produto, index) {
+      quantidades[index] = 0;
+
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'item';
+
+      const name = document.createElement('div');
+      name.className = 'item-name';
+      name.textContent = `${produto.nome} (R$${produto.preco})`;
+
+      const controls = document.createElement('div');
+      controls.className = 'controls';
+
+      const menos = document.createElement('button');
+      menos.textContent = '-';
+
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.value = '0';
+      input.min = '0';
+
+      const mais = document.createElement('button');
+      mais.textContent = '+';
+
+      const maxBtn = document.createElement('button');
+      maxBtn.className = 'max-button';
+      maxBtn.textContent = 'Máximo';
+
+      menos.addEventListener('click', () => {
+        let val = parseInt(input.value) || 0;
+        if (val > 0) {
+          input.value = --val;
+          quantidades[index] = val;
+          atualizarTotal();
+        }
+      });
+
+      mais.addEventListener('click', () => {
+        let val = parseInt(input.value) || 0;
+        if (val < produto.maximo) {
+          input.value = ++val;
+          quantidades[index] = val;
+          atualizarTotal();
+        }
+      });
+
+      maxBtn.addEventListener('click', () => {
+        input.value = produto.maximo;
+        quantidades[index] = produto.maximo;
+        atualizarTotal();
+      });
+
+      input.addEventListener('input', () => {
+        let val = parseInt(input.value) || 0;
+        quantidades[index] = val;
+        atualizarTotal();
+      });
+
+      controls.appendChild(menos);
+      controls.appendChild(input);
+      controls.appendChild(mais);
+      controls.appendChild(maxBtn);
+
+      itemDiv.appendChild(name);
+      itemDiv.appendChild(controls);
+
+      itemsContainer.appendChild(itemDiv);
+    }
+
+    produtos.forEach((produto, index) => criarItem(produto, index));
+
+    descontoCheckbox.addEventListener('change', atualizarTotal);
+    atendimentoCheckbox.addEventListener('change', atualizarTotal);
+
+    function resetar() {
+      for (let i in quantidades) {
+        quantidades[i] = 0;
+        document.querySelectorAll('input[type="number"]')[i].value = 0;
+      }
+      atendimentoCheckbox.checked = false;
+      descontoCheckbox.checked = false;
+      extraValor = 0;
+      atualizarTotal();
+    }
+
+    function preset(tipo) {
+      resetar();
+      switch (tipo) {
+        case 'P':
+          setQuant('Atadura', 10);
+          setQuant('Bandagem', 5);
+          setQuant('Medkit', 2);
+          break;
+        case 'M':
+          preset('P');
+          setQuant('Analgésico', 10);
+          break;
+        case 'G':
+          preset('M');
+          setQuant('Adrenalina', 1);
+          break;
+        case 'GG':
+          preset('M');
+          setQuant('Adrenalina', 3); // Agora adiciona 3 adrenalinas
+          break;
+        case 'TUDO':
+          setQuant('Atadura', 10);
+          setQuant('Bandagem', 5);
+          setQuant('Medkit', 2);
+          setQuant('Analgésico', 10);
+          setQuant('Sinkalm', 5);
+          setQuant('Ritmoneury', 5);
+          setQuant('Adrenalina', 3);
+          break;
+      }
+      atualizarTotal();
+    }
+
+    function setQuant(nomeProduto, quantidade) {
+      const index = produtos.findIndex(p => p.nome === nomeProduto);
+      if (index !== -1) {
+        quantidades[index] = quantidade;
+        document.querySelectorAll('input[type="number"]')[index].value = quantidade;
+      }
+    }
+
+    function add10x10() {
+      extraValor += 2000;
+      atualizarTotal();
+    }
+  </script>
+</body>
+</html>
